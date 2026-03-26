@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>El Prompt Perfecto — Guía Completa para Claude</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0d0b;
+    --bg2: #141412;
+    --bg3: #1c1c18;
+    --surface: #222220;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #e8e4d8;
+    --muted: #8a8778;
+    --accent: #c9b97a;
+    --accent2: #7a9c8e;
+    --accent3: #c97a7a;
+    --serif: 'DM Serif Display', Georgia, serif;
+    --sans: 'DM Sans', sans-serif;
+    --mono: 'DM Mono', monospace;
+
+    /* Block colors */
+    --c1: #8b7fd4; --c1b: #2a2640;
+    --c2: #5da896; --c2b: #1a2e2a;
+    --c3: #5b8fd4; --c3b: #1a2438;
+    --c4: #c4943a; --c4b: #2e2210;
+    --c5: #c4623a; --c5b: #2e180e;
+    --c6: #5d9e5a; --c6b: #1a281a;
+    --c7: #c4517a; --c7b: #2e1220;
+    --c8: #8a8778; --c8b: #1e1e1c;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-weight: 300;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* ─── NOISE OVERLAY ─── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+    opacity: 0.025;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ─── HERO ─── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 80px 5vw 60px;
+    position: relative;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 50%;
+    height: 100%;
+    background: radial-gradient(ellipse at 80% 40%, rgba(201,185,122,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 28px;
+    opacity: 0;
+    animation: fadeUp 0.7s ease forwards 0.1s;
+  }
+
+  .hero h1 {
+    font-family: var(--serif);
+    font-size: clamp(48px, 8vw, 96px);
+    line-height: 1.0;
+    font-weight: 400;
+    max-width: 760px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards 0.25s;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .hero-sub {
+    margin-top: 32px;
+    font-size: 18px;
+    color: var(--muted);
+    max-width: 520px;
+    line-height: 1.6;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards 0.4s;
+  }
+
+  .hero-meta {
+    margin-top: 56px;
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards 0.55s;
+  }
+
+  .hero-stat {
+    text-align: center;
+  }
+
+  .hero-stat strong {
+    display: block;
+    font-family: var(--serif);
+    font-size: 36px;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .hero-stat span {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: var(--mono);
+    letter-spacing: 0.1em;
+  }
+
+  .hero-divider {
+    width: 1px;
+    height: 40px;
+    background: var(--border2);
+  }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 36px;
+    left: 5vw;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards 0.8s;
+  }
+
+  .scroll-hint::before {
+    content: '';
+    display: block;
+    width: 24px;
+    height: 1px;
+    background: var(--muted);
+  }
+
+  /* ─── LAYOUT ─── */
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 5vw;
+  }
+
+  section {
+    padding: 80px 5vw;
+    position: relative;
+  }
+
+  /* ─── SECTION HEADER ─── */
+  .section-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+
+  .section-title {
+    font-family: var(--serif);
+    font-size: clamp(32px, 4vw, 52px);
+    font-weight: 400;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+
+  .section-desc {
+    color: var(--muted);
+    max-width: 540px;
+    margin-bottom: 56px;
+    font-size: 16px;
+  }
+
+  /* ─── OVERVIEW BAR ─── */
+  .overview {
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 0 5vw;
+    overflow-x: auto;
+  }
+
+  .overview-track {
+    display: flex;
+    min-width: max-content;
+  }
+
+  .overview-item {
+    padding: 20px 28px;
+    border-right: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .overview-item:hover { background: var(--bg3); }
+
+  .overview-item:first-child { border-left: 1px solid var(--border); }
+
+  .ov-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .ov-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .ov-label {
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  /* ─── BLOCKS ─── */
+  .blocks-section { padding-top: 64px; padding-bottom: 64px; }
+
+  .block {
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    margin-bottom: 2px;
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+
+  .block.open { border-color: var(--border2); }
+
+  .block-header {
+    display: grid;
+    grid-template-columns: 64px 1fr auto;
+    align-items: center;
+    padding: 0 28px 0 0;
+    cursor: pointer;
+    min-height: 80px;
+    gap: 24px;
+    transition: background 0.2s;
+  }
+
+  .block-header:hover { background: rgba(255,255,255,0.02); }
+
+  .block-number {
+    width: 64px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--serif);
+    font-size: 28px;
+    color: var(--muted);
+    border-right: 1px solid var(--border);
+    flex-shrink: 0;
+    transition: color 0.3s;
+  }
+
+  .block.open .block-number { color: var(--text); }
+
+  .block-title-wrap { padding: 20px 0; }
+
+  .block-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .block-title {
+    font-family: var(--serif);
+    font-size: 22px;
+    font-weight: 400;
+    line-height: 1.2;
+  }
+
+  .block-summary {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .block-toggle {
+    font-family: var(--mono);
+    font-size: 18px;
+    color: var(--muted);
+    transition: transform 0.3s, color 0.3s;
+    flex-shrink: 0;
+  }
+
+  .block.open .block-toggle { transform: rotate(45deg); color: var(--text); }
+
+  .block-body {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.4s ease;
+  }
+
+  .block.open .block-body { grid-template-rows: 1fr; }
+
+  .block-inner {
+    overflow: hidden;
+  }
+
+  .block-content {
+    padding: 0 28px 32px 88px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+
+  @media (max-width: 700px) {
+    .block-content { grid-template-columns: 1fr; padding-left: 28px; }
+  }
+
+  .content-col h4 {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  .content-col p {
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.7;
+    margin-bottom: 12px;
+  }
+
+  .content-col p:last-child { margin-bottom: 0; }
+
+  .example-box {
+    background: var(--bg3);
+    border-left: 2px solid;
+    border-radius: 0 4px 4px 0;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+  }
+
+  .example-box.bad { border-color: var(--accent3); }
+  .example-box.good { border-color: var(--accent2); }
+
+  .ex-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .example-box.bad .ex-label { color: var(--accent3); }
+  .example-box.good .ex-label { color: var(--accent2); }
+
+  .example-box code {
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text);
+  }
+
+  .tip-list {
+    list-style: none;
+    margin-top: 4px;
+  }
+
+  .tip-list li {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--muted);
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+  }
+
+  .tip-list li:last-child { border-bottom: none; }
+
+  .tip-list li::before {
+    content: '→';
+    font-family: var(--mono);
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  /* ─── BUILDER SECTION ─── */
+  .builder-section {
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .builder-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+  }
+
+  @media (max-width: 800px) { .builder-grid { grid-template-columns: 1fr; } }
+
+  .builder-form { display: flex; flex-direction: column; gap: 16px; }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+
+  .field label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .field-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .field input,
+  .field textarea,
+  .field select {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 300;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+    resize: vertical;
+  }
+
+  .field input:focus,
+  .field textarea:focus,
+  .field select:focus { border-color: var(--accent); }
+
+  .field textarea { min-height: 70px; }
+
+  .field select option { background: var(--bg3); }
+
+  .btn-generate {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    padding: 14px 28px;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: opacity 0.2s, transform 0.1s;
+    margin-top: 8px;
+    align-self: flex-start;
+  }
+
+  .btn-generate:hover { opacity: 0.85; }
+  .btn-generate:active { transform: scale(0.98); }
+
+  .output-panel {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 28px;
+    position: relative;
+    min-height: 300px;
+  }
+
+  .output-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+
+  .output-text {
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.8;
+    color: var(--text);
+    white-space: pre-wrap;
+  }
+
+  .output-placeholder {
+    font-size: 14px;
+    color: var(--muted);
+    font-style: italic;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    width: 80%;
+  }
+
+  .copy-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 6px 12px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: none;
+  }
+
+  .copy-btn:hover { color: var(--text); border-color: var(--border2); }
+  .copy-btn.visible { display: block; }
+  .copy-btn.copied { color: var(--accent2); border-color: var(--accent2); }
+
+  /* ─── FORMULA SECTION ─── */
+  .formula-section { border-top: 1px solid var(--border); }
+
+  .formula-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    margin-top: 8px;
+  }
+
+  .formula-block {
+    border-radius: 2px;
+    padding: 8px 16px;
+    font-family: var(--mono);
+    font-size: 13px;
+    border: 1px solid;
+  }
+
+  .formula-op {
+    font-family: var(--serif);
+    font-size: 28px;
+    color: var(--muted);
+    line-height: 1;
+  }
+
+  .formula-result {
+    margin-top: 32px;
+    padding: 28px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+  }
+
+  .formula-result-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .formula-result p {
+    font-family: var(--mono);
+    font-size: 14px;
+    line-height: 1.9;
+    color: var(--text);
+  }
+
+  /* ─── PRINCIPLES ─── */
+  .principles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 48px;
+  }
+
+  .principle {
+    background: var(--bg);
+    padding: 36px 32px;
+    transition: background 0.2s;
+  }
+
+  .principle:hover { background: var(--bg2); }
+
+  .principle-icon {
+    font-family: var(--serif);
+    font-size: 40px;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 20px;
+  }
+
+  .principle h3 {
+    font-family: var(--serif);
+    font-size: 20px;
+    font-weight: 400;
+    margin-bottom: 12px;
+  }
+
+  .principle p {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  /* ─── FOOTER ─── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 40px 5vw;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  footer p {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+  }
+
+  footer a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  /* ─── ANIMATIONS ─── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--surface); border-radius: 3px; }
+
+  /* ─── SELECTION ─── */
+  ::selection { background: rgba(201,185,122,0.25); }
+</style>
+</head>
+<body>
+
+<!-- ── HERO ── -->
+<header class="hero">
+  <p class="hero-label">Guía de prompting · Claude AI · 2025</p>
+  <h1>El arte de<br>escribir el <em>prompt</em><br>perfecto</h1>
+  <p class="hero-sub">Una estructura probada de 8 bloques para comunicarte con Claude y obtener resultados extraordinarios.</p>
+  <div class="hero-meta">
+    <div class="hero-stat">
+      <strong>8</strong>
+      <span>bloques</span>
+    </div>
+    <div class="hero-divider"></div>
+    <div class="hero-stat">
+      <strong>4</strong>
+      <span>dimensiones del rol</span>
+    </div>
+    <div class="hero-divider"></div>
+    <div class="hero-stat">
+      <strong>∞</strong>
+      <span>combinaciones</span>
+    </div>
+  </div>
+  <p class="scroll-hint">Desplázate para explorar</p>
+</header>
+
+<!-- ── NAV BAR ── -->
+<nav class="overview">
+  <div class="overview-track">
+    <a class="overview-item" href="#blocks">
+      <span class="ov-num">01</span>
+      <span class="ov-dot" style="background:var(--c1)"></span>
+      <span class="ov-label">Rol</span>
+    </a>
+    <a class="overview-item" href="#blocks">
+      <span class="ov-num">02</span>
+      <span class="ov-dot" style="background:var(--c2)"></span>
+      <span class="ov-label">Contexto</span>
+    </a>
+    <a class="overview-item" href="#blocks">
+      <span class="ov-num">03</span>
+      <span class="ov-dot" style="background:var(--c3)"></span>
+      <span class="ov-label">Tarea</span>
+    </a>
+    <a class="overview-item" href="#blocks">
+      <span class="ov-num">04</span>
+      <span class="ov-dot" style="background:var(--c4)"></span>
+      <span class="ov-label">Instrucciones</span>
+    </a>
+    <a class="overview-item" href="#blocks">
+      <span class="ov-num">05</span>
+      <span class="ov-dot" style="background:var(--c5)"></span>
+      <span class="ov-label">Ejemplos</span>
+    </a>
+    <a class="overview-item" href="#blocks">
+      <span class="ov-num">06</span>
+      <span class="ov-dot" style="background:var(--c6)"></span>
+      <span class="ov-label">Formato</span>
+    </a>
+    <a class="overview-item" href="#blocks">
+      <span class="ov-num">07</span>
+      <span class="ov-dot" style="background:var(--c7)"></span>
+      <span class="ov-label">Tono</span>
+    </a>
+    <a class="overview-item" href="#blocks">
+      <span class="ov-num">08</span>
+      <span class="ov-dot" style="background:var(--c8)"></span>
+      <span class="ov-label">Razonamiento</span>
+    </a>
+    <a class="overview-item" href="#builder">
+      <span class="ov-num">→</span>
+      <span class="ov-dot" style="background:var(--accent)"></span>
+      <span class="ov-label">Constructor</span>
+    </a>
+  </div>
+</nav>
+
+<!-- ── BLOCKS ── -->
+<section class="blocks-section" id="blocks">
+  <div style="max-width:1100px;margin:0 auto;">
+    <p class="section-label reveal">La estructura</p>
+    <h2 class="section-title reveal">Los 8 bloques del<br>prompt perfecto</h2>
+    <p class="section-desc reveal">Haz clic en cada bloque para ver la explicación completa, ejemplos y errores comunes. No todos los prompts necesitan los 8 — úsalos según la complejidad de tu tarea.</p>
+
+    <!-- BLOCK 1 -->
+    <div class="block reveal" id="b1" data-color="var(--c1)">
+      <div class="block-header" onclick="toggleBlock('b1')">
+        <div class="block-number">1</div>
+        <div class="block-title-wrap">
+          <p class="block-tag" style="color:var(--c1)">Quién eres</p>
+          <h3 class="block-title">Rol / Persona</h3>
+          <p class="block-summary">Define la identidad y expertise del modelo antes de cualquier instrucción.</p>
+        </div>
+        <div class="block-toggle">+</div>
+      </div>
+      <div class="block-body">
+        <div class="block-inner">
+          <div class="block-content">
+            <div class="content-col">
+              <h4>¿Qué es y por qué importa?</h4>
+              <p>El rol es el bloque con mayor impacto porque condiciona el vocabulario, el nivel de detalle, los supuestos y la perspectiva de <em>toda</em> la respuesta. Define quién debe ser Claude antes de darle cualquier instrucción.</p>
+              <p>Las 4 dimensiones de un rol preciso:</p>
+              <ul class="tip-list">
+                <li><strong>Profesión + especialidad</strong> — no solo "experto en marketing", sino en qué subcampo exacto.</li>
+                <li><strong>Industria + región</strong> — el consejo de marketing no aplica igual en Monterrey que en España.</li>
+                <li><strong>Perspectiva / sesgo intencional</strong> — "como un escéptico", "priorizando velocidad sobre calidad".</li>
+                <li><strong>Actitud</strong> — "directo y sin rodeos", "paciente como profesor", "crítico pero constructivo".</li>
+              </ul>
+            </div>
+            <div class="content-col">
+              <h4>Comparativa de especificidad</h4>
+              <div class="example-box bad">
+                <p class="ex-label">❌ Vago</p>
+                <code>Eres un experto en negocios.</code>
+              </div>
+              <div class="example-box good">
+                <p class="ex-label">✓ Preciso</p>
+                <code>Eres un consultor senior de estrategia de producto para empresas SaaS B2B en México. Hablas directo, evitas jerga innecesaria y siempre priorizas el impacto en ingresos.</code>
+              </div>
+              <h4 style="margin-top:20px">Errores comunes</h4>
+              <ul class="tip-list">
+                <li>Rol demasiado largo (más de 2 oraciones diluye el efecto).</li>
+                <li>Poner el rol al final del prompt — siempre va <em>primero</em>.</li>
+                <li>Rol contradictorio con el tono del bloque 7.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLOCK 2 -->
+    <div class="block reveal" id="b2">
+      <div class="block-header" onclick="toggleBlock('b2')">
+        <div class="block-number">2</div>
+        <div class="block-title-wrap">
+          <p class="block-tag" style="color:var(--c2)">Por qué</p>
+          <h3 class="block-title">Contexto / Situación</h3>
+          <p class="block-summary">El fondo necesario para que la respuesta no sea genérica.</p>
+        </div>
+        <div class="block-toggle">+</div>
+      </div>
+      <div class="block-body">
+        <div class="block-inner">
+          <div class="block-content">
+            <div class="content-col">
+              <h4>¿Qué incluir?</h4>
+              <p>El contexto responde: ¿para quién es esto? ¿Cuál es el problema actual? ¿Qué ya se intentó? ¿Qué restricciones existen?</p>
+              <ul class="tip-list">
+                <li>Audiencia final del output (cliente, CEO, usuario técnico).</li>
+                <li>Estado actual de la situación.</li>
+                <li>Lo que ya se probó y no funcionó.</li>
+                <li>Limitaciones de tiempo, presupuesto o recursos.</li>
+              </ul>
+            </div>
+            <div class="content-col">
+              <h4>Ejemplo</h4>
+              <div class="example-box bad">
+                <p class="ex-label">❌ Sin contexto</p>
+                <code>Redacta un correo para un cliente.</code>
+              </div>
+              <div class="example-box good">
+                <p class="ex-label">✓ Con contexto</p>
+                <code>Redacta un correo para un cliente corporativo (director de compras, tono formal) que lleva 3 semanas sin responder. Ya le enviamos 2 seguimientos. El objetivo es cerrar una demo esta semana.</code>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLOCK 3 -->
+    <div class="block reveal" id="b3">
+      <div class="block-header" onclick="toggleBlock('b3')">
+        <div class="block-number">3</div>
+        <div class="block-title-wrap">
+          <p class="block-tag" style="color:var(--c3)">Qué hacer</p>
+          <h3 class="block-title">Tarea principal</h3>
+          <p class="block-summary">Un verbo de acción claro que define exactamente qué se espera.</p>
+        </div>
+        <div class="block-toggle">+</div>
+      </div>
+      <div class="block-body">
+        <div class="block-inner">
+          <div class="block-content">
+            <div class="content-col">
+              <h4>Verbos de acción efectivos</h4>
+              <p>La tarea debe ser una oración con un verbo inequívoco. Evita "ayúdame", "habla sobre" o "dime algo de".</p>
+              <ul class="tip-list">
+                <li><strong>Crear</strong> — genera algo nuevo desde cero.</li>
+                <li><strong>Analizar</strong> — descompone y evalúa.</li>
+                <li><strong>Resumir</strong> — extrae los puntos clave.</li>
+                <li><strong>Comparar</strong> — contrasta opciones con criterios.</li>
+                <li><strong>Redactar</strong> — produce texto con intención específica.</li>
+                <li><strong>Extraer</strong> — identifica elementos concretos.</li>
+                <li><strong>Clasificar</strong> — organiza bajo categorías definidas.</li>
+              </ul>
+            </div>
+            <div class="content-col">
+              <h4>Ejemplo</h4>
+              <div class="example-box bad">
+                <p class="ex-label">❌ Vago</p>
+                <code>Ayúdame con mi presentación de ventas.</code>
+              </div>
+              <div class="example-box good">
+                <p class="ex-label">✓ Claro</p>
+                <code>Redacta las 5 diapositivas clave de una presentación de ventas para un cliente enterprise en retail.</code>
+              </div>
+              <h4 style="margin-top:20px">Tip</h4>
+              <ul class="tip-list">
+                <li>Una tarea por prompt. Si necesitas dos cosas, haz dos prompts o usa numeración explícita.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLOCK 4 -->
+    <div class="block reveal" id="b4">
+      <div class="block-header" onclick="toggleBlock('b4')">
+        <div class="block-number">4</div>
+        <div class="block-title-wrap">
+          <p class="block-tag" style="color:var(--c4)">Cómo hacerlo</p>
+          <h3 class="block-title">Instrucciones específicas</h3>
+          <p class="block-summary">Límites, pasos, restricciones: qué incluir y qué NO incluir.</p>
+        </div>
+        <div class="block-toggle">+</div>
+      </div>
+      <div class="block-body">
+        <div class="block-inner">
+          <div class="block-content">
+            <div class="content-col">
+              <h4>¿Por qué las instrucciones negativas importan?</h4>
+              <p>Claude tiende a ser completo y exhaustivo por defecto. Las instrucciones negativas ("no uses...", "evita...") son igual de poderosas que las positivas para moldear el output.</p>
+              <ul class="tip-list">
+                <li>Longitud máxima o mínima del output.</li>
+                <li>Pasos o fases a seguir en orden.</li>
+                <li>Temas o enfoques a excluir explícitamente.</li>
+                <li>Nivel de detalle técnico esperado.</li>
+                <li>Restricciones de formato dentro del contenido.</li>
+              </ul>
+            </div>
+            <div class="content-col">
+              <h4>Ejemplo de instrucciones combinadas</h4>
+              <div class="example-box good">
+                <p class="ex-label">✓ Instrucciones mixtas</p>
+                <code>— Usa bullets cortos, máximo 8 palabras por punto.
+— No uses jerga técnica ni anglicismos.
+— Prioriza beneficios concretos, no características.
+— Incluye una llamada a la acción al final.
+— Máximo 150 palabras en total.</code>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLOCK 5 -->
+    <div class="block reveal" id="b5">
+      <div class="block-header" onclick="toggleBlock('b5')">
+        <div class="block-number">5</div>
+        <div class="block-title-wrap">
+          <p class="block-tag" style="color:var(--c5)">Muéstrale</p>
+          <h3 class="block-title">Ejemplos (few-shot)</h3>
+          <p class="block-summary">El bloque con mayor impacto en la calidad del output.</p>
+        </div>
+        <div class="block-toggle">+</div>
+      </div>
+      <div class="block-body">
+        <div class="block-inner">
+          <div class="block-content">
+            <div class="content-col">
+              <h4>¿Por qué es tan poderoso?</h4>
+              <p>Mostrar es más eficiente que describir. Con un par de ejemplos input → output, Claude calibra instantáneamente el tono, la profundidad, la estructura y el nivel de formalidad que esperas.</p>
+              <ul class="tip-list">
+                <li>1 ejemplo = one-shot. Rápido, útil para tareas simples.</li>
+                <li>2–3 ejemplos = few-shot. Ideal para outputs repetibles o con patrón específico.</li>
+                <li>Ejemplos negativos ("esto NO") también funcionan muy bien.</li>
+              </ul>
+            </div>
+            <div class="content-col">
+              <h4>Estructura del ejemplo</h4>
+              <div class="example-box good">
+                <p class="ex-label">✓ Few-shot bien estructurado</p>
+                <code>Ejemplo:
+Input: "Lanzamiento de producto de limpieza"
+Output: "Limpieza sin esfuerzo. Resultados que se ven."
+
+Ahora genera un tagline para:
+Input: "Servicio de contabilidad para pymes"</code>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLOCK 6 -->
+    <div class="block reveal" id="b6">
+      <div class="block-header" onclick="toggleBlock('b6')">
+        <div class="block-number">6</div>
+        <div class="block-title-wrap">
+          <p class="block-tag" style="color:var(--c6)">Cómo presentar</p>
+          <h3 class="block-title">Formato de salida</h3>
+          <p class="block-summary">Tabla, bullets, JSON, prosa — Claude elige por defecto si no lo especificas.</p>
+        </div>
+        <div class="block-toggle">+</div>
+      </div>
+      <div class="block-body">
+        <div class="block-inner">
+          <div class="block-content">
+            <div class="content-col">
+              <h4>Opciones de formato</h4>
+              <ul class="tip-list">
+                <li><strong>Tabla</strong> — comparaciones, datos estructurados.</li>
+                <li><strong>Bullet points</strong> — listas accionables, summaries.</li>
+                <li><strong>JSON / YAML</strong> — outputs para sistemas o código.</li>
+                <li><strong>Markdown</strong> — documentos con jerarquía visual.</li>
+                <li><strong>Párrafos continuos</strong> — narrativa, correos, artículos.</li>
+                <li><strong>Numerado</strong> — pasos a seguir en orden.</li>
+              </ul>
+            </div>
+            <div class="content-col">
+              <h4>Especificaciones adicionales</h4>
+              <ul class="tip-list">
+                <li>Idioma del output (útil si el prompt va en español pero el output debe ser en inglés).</li>
+                <li>Longitud máxima en palabras, párrafos o tokens.</li>
+                <li>Estructura de encabezados (H1/H2/H3).</li>
+                <li>Si incluir o no introducción/conclusión.</li>
+              </ul>
+              <div class="example-box good" style="margin-top:14px">
+                <p class="ex-label">✓ Ejemplo de especificación</p>
+                <code>Responde en formato JSON con las claves: titulo, resumen (máx 50 palabras), puntos_clave (array de 3 strings), cta.</code>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLOCK 7 -->
+    <div class="block reveal" id="b7">
+      <div class="block-header" onclick="toggleBlock('b7')">
+        <div class="block-number">7</div>
+        <div class="block-title-wrap">
+          <p class="block-tag" style="color:var(--c7)">Cómo sonar</p>
+          <h3 class="block-title">Tono y estilo</h3>
+          <p class="block-summary">No el tono del experto (eso va en el rol), sino el tono del texto generado.</p>
+        </div>
+        <div class="block-toggle">+</div>
+      </div>
+      <div class="block-body">
+        <div class="block-inner">
+          <div class="block-content">
+            <div class="content-col">
+              <h4>Dimensiones del tono</h4>
+              <ul class="tip-list">
+                <li><strong>Formalidad</strong> — formal, semiformall, coloquial.</li>
+                <li><strong>Energía</strong> — entusiasta, neutro, sobrio.</li>
+                <li><strong>Dirección</strong> — directo y asertivo vs. cauteloso.</li>
+                <li><strong>Densidad</strong> — técnico y denso vs. simple y accesible.</li>
+              </ul>
+              <p style="margin-top:12px">Puedes referenciar estilos conocidos: "como Paul Graham", "como un consultor de McKinsey", "como newsletter de startup".</p>
+            </div>
+            <div class="content-col">
+              <h4>Diferencia rol vs. tono</h4>
+              <div class="example-box good">
+                <p class="ex-label">Rol (bloque 1)</p>
+                <code>Eres un abogado corporativo con 15 años de experiencia en fusiones.</code>
+              </div>
+              <div class="example-box good" style="margin-top:8px">
+                <p class="ex-label">Tono (bloque 7)</p>
+                <code>Escribe de forma accesible, sin términos legales, para un CEO sin formación jurídica.</code>
+              </div>
+              <p style="font-size:13px;color:var(--muted);margin-top:12px">El rol define el conocimiento. El tono define cómo se comunica ese conocimiento.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLOCK 8 -->
+    <div class="block reveal" id="b8">
+      <div class="block-header" onclick="toggleBlock('b8')">
+        <div class="block-number">8</div>
+        <div class="block-title-wrap">
+          <p class="block-tag" style="color:var(--c8)">Cómo pensar</p>
+          <h3 class="block-title">Razonamiento / Chain-of-thought</h3>
+          <p class="block-summary">Activa el pensamiento explícito paso a paso para problemas complejos.</p>
+        </div>
+        <div class="block-toggle">+</div>
+      </div>
+      <div class="block-body">
+        <div class="block-inner">
+          <div class="block-content">
+            <div class="content-col">
+              <h4>¿Cuándo usarlo?</h4>
+              <p>Para tareas analíticas, de múltiples pasos, o donde el proceso importa tanto como el resultado. No es necesario en prompts simples.</p>
+              <ul class="tip-list">
+                <li>Análisis con pros y contras.</li>
+                <li>Resolución de problemas matemáticos o lógicos.</li>
+                <li>Decisiones con múltiples variables.</li>
+                <li>Diagnósticos o evaluaciones complejas.</li>
+              </ul>
+            </div>
+            <div class="content-col">
+              <h4>Frases que lo activan</h4>
+              <div class="example-box good">
+                <p class="ex-label">✓ Activadores de CoT</p>
+                <code>— "Piensa paso a paso antes de responder."
+— "Razona en voz alta, luego dame tu conclusión."
+— "Antes de responder, lista los pros y contras."
+— "Muéstrame tu proceso de análisis."
+— "Explica tu razonamiento en cada paso."</code>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FORMULA ── -->
+<section class="formula-section" style="padding:80px 5vw;">
+  <div style="max-width:1100px;margin:0 auto;">
+    <p class="section-label reveal">La fórmula</p>
+    <h2 class="section-title reveal">Prompts listos<br>para usar</h2>
+    <p class="section-desc reveal">Tres plantillas completas según el nivel de complejidad de tu tarea.</p>
+
+    <!-- Template 1 -->
+    <div class="formula-result reveal">
+      <p class="formula-result-label">Plantilla básica (3 bloques) — tareas simples</p>
+      <p><span style="color:var(--c1);">[ROL]</span> Eres un copywriter experto en marcas de consumo para el mercado mexicano.
+
+<span style="color:var(--c3);">[TAREA]</span> Redacta un tagline para una nueva marca de agua embotellada premium.
+
+<span style="color:var(--c7);">[TONO]</span> Aspiracional, conciso, máximo 6 palabras.</p>
+    </div>
+
+    <div class="formula-result reveal" style="margin-top:2px;">
+      <p class="formula-result-label">Plantilla intermedia (5 bloques) — tareas de negocio</p>
+      <p><span style="color:var(--c1);">[ROL]</span> Eres un estratega de growth para startups B2B SaaS en Latinoamérica. Eres directo y orientado a resultados.
+
+<span style="color:var(--c2);">[CONTEXTO]</span> Tenemos una startup de facturación electrónica con 200 clientes pyme. Queremos crecer a 1,000 en 6 meses. Nuestro CAC actual es de $800 USD.
+
+<span style="color:var(--c3);">[TAREA]</span> Propón 3 canales de adquisición priorizados con su lógica detrás.
+
+<span style="color:var(--c4);">[INSTRUCCIONES]</span> Sé específico para México. No incluyas outbound genérico. Cada canal con estimación de CAC.
+
+<span style="color:var(--c6);">[FORMATO]</span> Una sección por canal. Encabezado con nombre + razón clave. Luego bullets accionables.</p>
+    </div>
+
+    <div class="formula-result reveal" style="margin-top:2px;">
+      <p class="formula-result-label">Plantilla avanzada (8 bloques) — análisis complejo</p>
+      <p><span style="color:var(--c1);">[ROL]</span> Eres un consultor senior de investigación de mercado con especialidad en consumidor masivo en México. Eres analítico, cauteloso con las conclusiones y siempre señalas limitaciones metodológicas.
+
+<span style="color:var(--c2);">[CONTEXTO]</span> Un cliente de retail quiere lanzar una línea de snacks saludables en CDMX y Monterrey. Tienen un presupuesto de investigación limitado y 8 semanas de plazo.
+
+<span style="color:var(--c3);">[TAREA]</span> Diseña una propuesta de investigación de mercado para validar el concepto y estimar el tamaño de mercado potencial.
+
+<span style="color:var(--c4);">[INSTRUCCIONES]</span> Incluye metodología mixta (cuantitativa + cualitativa). Justifica cada método. Señala los riesgos de cada elección. No asumas presupuesto ilimitado.
+
+<span style="color:var(--c5);">[EJEMPLO]</span> El output debe parecerse a una propuesta de consultoría real: objetivos, metodología, entregables, cronograma.
+
+<span style="color:var(--c6);">[FORMATO]</span> Secciones con encabezados claros. Tablas donde aplique. Máximo 600 palabras.
+
+<span style="color:var(--c7);">[TONO]</span> Profesional, como carta propuesta a un director de marketing.
+
+<span style="color:var(--c8);">[RAZONAMIENTO]</span> Antes de estructurar la propuesta, razona brevemente cuál es el mayor riesgo de este proyecto y cómo la metodología lo mitiga.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── BUILDER ── -->
+<section class="builder-section" id="builder">
+  <div style="max-width:1100px;margin:0 auto;padding:80px 0;">
+    <p class="section-label reveal">Constructor interactivo</p>
+    <h2 class="section-title reveal">Construye tu<br>prompt ahora</h2>
+    <p class="section-desc reveal">Llena los bloques que necesites y genera tu prompt listo para copiar.</p>
+
+    <div class="builder-grid reveal">
+      <div class="builder-form">
+        <div class="field">
+          <label><span class="field-dot" style="background:var(--c1)"></span> 1 · Rol</label>
+          <textarea id="f1" placeholder="Eres un experto en X, especializado en Y para el mercado Z. Tu estilo es..."></textarea>
+        </div>
+        <div class="field">
+          <label><span class="field-dot" style="background:var(--c2)"></span> 2 · Contexto</label>
+          <textarea id="f2" placeholder="La situación actual es... La audiencia es... Ya se intentó..."></textarea>
+        </div>
+        <div class="field">
+          <label><span class="field-dot" style="background:var(--c3)"></span> 3 · Tarea</label>
+          <input id="f3" type="text" placeholder="Redacta / Analiza / Crea / Compara...">
+        </div>
+        <div class="field">
+          <label><span class="field-dot" style="background:var(--c4)"></span> 4 · Instrucciones</label>
+          <textarea id="f4" placeholder="Incluye X. No uses Y. Máximo Z palabras. Prioriza..."></textarea>
+        </div>
+        <div class="field">
+          <label><span class="field-dot" style="background:var(--c5)"></span> 5 · Ejemplo (opcional)</label>
+          <textarea id="f5" placeholder="Ejemplo: Input → 'texto' / Output esperado → 'resultado'"></textarea>
+        </div>
+        <div class="field">
+          <label><span class="field-dot" style="background:var(--c6)"></span> 6 · Formato</label>
+          <select id="f6">
+            <option value="">— Sin especificar —</option>
+            <option value="Responde en formato de bullet points cortos.">Bullet points</option>
+            <option value="Responde en formato de tabla con columnas claras.">Tabla</option>
+            <option value="Responde en prosa, párrafos continuos sin bullet points.">Prosa / párrafos</option>
+            <option value="Responde en formato JSON estructurado.">JSON</option>
+            <option value="Responde en formato Markdown con encabezados H2 y H3.">Markdown</option>
+            <option value="Responde con una lista numerada paso a paso.">Lista numerada</option>
+          </select>
+        </div>
+        <div class="field">
+          <label><span class="field-dot" style="background:var(--c7)"></span> 7 · Tono</label>
+          <select id="f7">
+            <option value="">— Sin especificar —</option>
+            <option value="Usa un tono formal y profesional.">Formal y profesional</option>
+            <option value="Usa un tono conversacional y accesible.">Conversacional</option>
+            <option value="Usa un tono técnico y preciso, sin simplificaciones.">Técnico y preciso</option>
+            <option value="Usa un tono directo, asertivo y sin rodeos.">Directo y asertivo</option>
+            <option value="Usa un tono empático y cercano.">Empático</option>
+            <option value="Usa un tono creativo y original.">Creativo</option>
+          </select>
+        </div>
+        <div class="field">
+          <label><span class="field-dot" style="background:var(--c8)"></span> 8 · Razonamiento</label>
+          <select id="f8">
+            <option value="">— Sin chain-of-thought —</option>
+            <option value="Antes de responder, piensa paso a paso.">Piensa paso a paso</option>
+            <option value="Antes de responder, razona en voz alta los pros y contras.">Pros y contras primero</option>
+            <option value="Muéstrame tu proceso de razonamiento antes de dar la respuesta final.">Mostrar razonamiento</option>
+          </select>
+        </div>
+
+        <button class="btn-generate" onclick="buildPrompt()">Generar prompt →</button>
+      </div>
+
+      <div class="output-panel">
+        <p class="output-label">Tu prompt generado</p>
+        <button class="copy-btn" id="copy-btn" onclick="copyPrompt()">Copiar</button>
+        <div id="output-placeholder" class="output-placeholder">
+          Llena al menos el campo<br><em>Tarea</em> para generar tu prompt.
+        </div>
+        <pre class="output-text" id="output-text" style="display:none"></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── PRINCIPLES ── -->
+<section style="border-top:1px solid var(--border);padding:80px 5vw;">
+  <div style="max-width:1100px;margin:0 auto;">
+    <p class="section-label reveal">Principios clave</p>
+    <h2 class="section-title reveal">Reglas de oro</h2>
+
+    <div class="principles-grid reveal">
+      <div class="principle">
+        <div class="principle-icon">I</div>
+        <h3>Calidad sobre cantidad</h3>
+        <p>No necesitas los 8 bloques siempre. Para tareas simples, 3 bloques bien escritos superan a 8 bloques mediocres. La estructura es un menú, no una obligación.</p>
+      </div>
+      <div class="principle">
+        <div class="principle-icon">II</div>
+        <h3>El rol va primero</h3>
+        <p>Claude da más peso a lo que aparece al inicio del prompt. El rol siempre debe ser la primera línea, antes de cualquier otra instrucción o contexto.</p>
+      </div>
+      <div class="principle">
+        <div class="principle-icon">III</div>
+        <h3>Itera, no perfecciones</h3>
+        <p>El primer prompt rara vez es el óptimo. Empieza, lee el output, identifica qué falta o sobra, y ajusta un bloque a la vez. La mejora es iterativa.</p>
+      </div>
+      <div class="principle">
+        <div class="principle-icon">IV</div>
+        <h3>Muestra, no describas</h3>
+        <p>Un solo ejemplo de input→output comunica más que tres párrafos describiendo el formato esperado. El bloque de ejemplos (few-shot) es el más subutilizado y el más poderoso.</p>
+      </div>
+      <div class="principle">
+        <div class="principle-icon">V</div>
+        <h3>Lo negativo también cuenta</h3>
+        <p>Las instrucciones de lo que NO quieres ("no uses jerga", "evita bullet points", "no incluyas introducción") son igual de efectivas que las instrucciones positivas.</p>
+      </div>
+      <div class="principle">
+        <div class="principle-icon">VI</div>
+        <h3>Concreto > genérico</h3>
+        <p>Cada elemento del prompt debe ser lo más específico posible. "Experto en marketing B2B para SaaS en México para PYMEs" genera un resultado radicalmente diferente a "experto en marketing".</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <p>El Prompt Perfecto · Guía para Claude · 2025</p>
+  <p>Basado en la documentación oficial de <a href="https://docs.anthropic.com" target="_blank">Anthropic</a> y mejores prácticas de prompting.</p>
+</footer>
+
+<script>
+  // Block toggle
+  function toggleBlock(id) {
+    const block = document.getElementById(id);
+    block.classList.toggle('open');
+  }
+
+  // Scroll reveal
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), i * 60);
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // Prompt builder
+  function buildPrompt() {
+    const f1 = document.getElementById('f1').value.trim();
+    const f2 = document.getElementById('f2').value.trim();
+    const f3 = document.getElementById('f3').value.trim();
+    const f4 = document.getElementById('f4').value.trim();
+    const f5 = document.getElementById('f5').value.trim();
+    const f6 = document.getElementById('f6').value.trim();
+    const f7 = document.getElementById('f7').value.trim();
+    const f8 = document.getElementById('f8').value.trim();
+
+    if (!f3) { alert('Agrega al menos la Tarea principal para generar el prompt.'); return; }
+
+    let parts = [];
+    if (f1) parts.push(f1);
+    if (f2) parts.push('\n' + f2);
+    parts.push('\n' + f3);
+    if (f8) parts.push('\n' + f8);
+    if (f4) parts.push('\n' + f4);
+    if (f5) parts.push('\n\n' + f5);
+    if (f6) parts.push('\n\n' + f6);
+    if (f7) parts.push(f7);
+
+    const result = parts.join(' ').replace(/\n +/g, '\n').trim();
+
+    document.getElementById('output-placeholder').style.display = 'none';
+    const out = document.getElementById('output-text');
+    out.style.display = 'block';
+    out.textContent = result;
+    document.getElementById('copy-btn').classList.add('visible');
+  }
+
+  function copyPrompt() {
+    const text = document.getElementById('output-text').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById('copy-btn');
+      btn.textContent = '✓ Copiado';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = 'Copiar';
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  }
+</script>
+</body>
+</html>
